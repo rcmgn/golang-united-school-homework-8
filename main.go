@@ -13,9 +13,9 @@ import (
 type Arguments map[string]string
 
 type User struct {
-	id    string
-	email string
-	age   int
+	Id    string `json:"id"`
+	Email string `json:"email"`
+	Age   int    `json:"age"`
 }
 
 //go run .\main.go -operation="add" -item={"id": "1", "email": "email@test.com", "age": 23} -fileName="users.json"
