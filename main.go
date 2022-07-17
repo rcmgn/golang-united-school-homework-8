@@ -36,29 +36,28 @@ func parseArgs() (args Arguments) {
 	return args
 }
 
+func findByID(data []User, id string) (res int) {
+	res = -1
+	for i, val := range data {
+		if val.Id == id {
+			return i
+		}
+	}
+	return
+}
+
 func Perform(args Arguments, writer io.Writer) error {
 	var data []User
+	var item User
+
 	if args["operation"] == "" {
 		return errors.New("-operation flag has to be specified")
 	}
 	if args["fileName"] == "" {
 		return errors.New("-fileName flag has to be specified")
 	}
-	//data = append(data, User{"1", "email@test.com", 23}, User{"2", "test2@test.com", 41})
-	//fmt.Println(data)
-	//b, err := json.Marshal(data)
-	//fmt.Println(b, err)
-	//ioutil.WriteFile("my.json", b, 0644)
-
 	b, _ := ioutil.ReadFile(args["fileName"])
-	//fmt.Println(b, err)
 	json.Unmarshal(b, &data)
-	//fmt.Println(err2)
-	//fmt.Println(data)
-
-	//plan = []byte("[{\"id\":\"1\",\"email\":\"test@test.com\",\"age\":34}]")
-	//s, _ := strconv.Unquote(string(plan))
-
 	switch args["operation"] {
 	case "list":
 		writer.Write(b)
@@ -66,16 +65,31 @@ func Perform(args Arguments, writer io.Writer) error {
 		if args["item"] == "" {
 			return errors.New("-item flag has to be specified")
 		}
-		fmt.Println(args["item"])
+		json.Unmarshal([]byte(args["item"]), &item)
+		if findByID(data, item.Id) >= 0 {
+			writer.Write([]byte("Item with id " + item.Id + " already exists"))
+		} else {
+			data = append(data, item)
+		}
 	case "findById":
 		if args["id"] == "" {
 			return errors.New("-id flag has to be specified")
+		}
+		i := findByID(data, args["id"])
+		if i != -1 {
+			b, _ := json.Marshal(data[i])
+			writer.Write(b)
 		}
 	case "remove":
 		if args["id"] == "" {
 			return errors.New("-id flag has to be specified")
 		}
-		writer.Write([]byte("Item with id " + args["id"] + " not found"))
+		i := findByID(data, args["id"])
+		if i == -1 {
+			writer.Write([]byte("Item with id " + args["id"] + " not found"))
+		} else {
+			data = append(data[:i], data[i+1:]...)
+		}
 	default:
 		return errors.New("Operation abcd not allowed!")
 	}
